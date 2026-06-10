@@ -1,0 +1,23 @@
+{
+  "name": "travelbuddy",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "dev:api": "turbo dev --filter=@travelbuddy/api",
+    "dev:web": "turbo dev --filter=@travelbuddy/web",
+    "db:generate": "npm run db:generate --workspace=@travelbuddy/api",
+    "db:migrate": "npm run db:migrate --workspace=@travelbuddy/api",
+    "db:seed": "npm run db:seed --workspace=@travelbuddy/api"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.0"
+  },
+  "packageManager": "npm@10.9.2"
+}
