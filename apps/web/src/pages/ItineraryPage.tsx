@@ -1,11 +1,48 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useItineraryStore } from '../store/itineraryStore';
-import { ArrowLeft, Clock, Map as MapIcon, Navigation, Info, Utensils } from 'lucide-react';
+import { ArrowLeft, Clock, Map as MapIcon, Navigation, Calendar, Menu, X, ChevronRight } from 'lucide-react';
+import RouteMap from '../components/RouteMap';
+import { PlaceCard } from '../components/PlaceCard';
 
 export default function ItineraryPage() {
   const navigate = useNavigate();
   const itinerary = useItineraryStore((state) => state.currentItinerary);
+  const [activeDay, setActiveDay] = useState(1);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [leftRatio, setLeftRatio] = useState(0.5);
+  const isDragging = useRef(false);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const newRatio = (e.clientX - rect.left) / rect.width;
+      setLeftRatio(Math.max(0.3, Math.min(newRatio, 0.7))); // constraint between 30% and 70%
+    };
+    const handleMouseUp = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        document.body.style.cursor = 'default';
+        document.body.style.userSelect = 'auto';
+      }
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   if (!itinerary) {
     return (
@@ -18,118 +55,165 @@ export default function ItineraryPage() {
     );
   }
 
+  const currentDayData = itinerary.days.find(d => d.dayNumber === activeDay);
+  const placesForMap = currentDayData?.slots.map(s => s.place) || [];
+  const routeGeometry = currentDayData?.slots[0]?.travelFromPrev?.routeGeometry;
+
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      {/* Header Area */}
-      <div className="bg-slate-950 text-white pt-12 pb-24 px-6 relative overflow-hidden">
-        <div className="absolute top-[-20%] left-[50%] w-[80%] h-[150%] bg-primary-600/20 rounded-full blur-[100px] pointer-events-none -translate-x-1/2" />
-        
-        <div className="max-w-4xl mx-auto relative z-10">
-          <button 
-            onClick={() => navigate('/')}
-            className="flex items-center text-slate-300 hover:text-white transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Start Over
-          </button>
-          
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-            {itinerary.title}
-          </h1>
-          <p className="text-slate-300 text-lg">
-            {itinerary.preferences.numDays} Days • {itinerary.preferences.budget} Budget • Staying near {itinerary.preferences.stayLocation.name}
-          </p>
-        </div>
-      </div>
+    <div className="w-full bg-gray-50 flex flex-col items-center px-4 md:px-6 lg:px-8">
+      
+      {/* Top Margin */}
+      <div className="h-4 shrink-0 w-full" />
 
-      {/* Main Content - Days */}
-      <div className="max-w-4xl mx-auto px-6 -mt-12 relative z-20 space-y-8">
-        {itinerary.days.map((day) => (
-          <div key={day.dayNumber} className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
-            {/* Day Header */}
-            <div className="bg-gradient-to-r from-primary-50 to-white px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-slate-800">Day {day.dayNumber}</h2>
-              <div className="flex gap-4 text-sm font-medium text-slate-500">
-                <span className="flex items-center"><Navigation className="w-4 h-4 mr-1 text-primary-500" /> {day.summary.totalTravelKm} km driving</span>
-                <span className="flex items-center"><MapIcon className="w-4 h-4 mr-1 text-primary-500" /> {day.summary.region}</span>
-              </div>
-            </div>
+      {/* Resizable Split Pane inside Constrained Margins */}
+      <div 
+        ref={containerRef}
+        className="w-full max-w-[1440px] flex flex-col md:flex-row bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden relative shrink-0 min-h-[600px]" 
+        style={{ height: 'calc(100vh - 56px - 32px)' }} // 56px Navbar + 32px (two h-4 margins)
+      >
 
-            {/* Timeline */}
-            <div className="p-6 relative">
-              <div className="absolute left-[39px] top-6 bottom-6 w-0.5 bg-slate-100"></div>
+        {/* --- Collapsible Sidebar Drawer --- */}
+        <div className={`absolute inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 transform transition-all duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full shadow-none'}`}>
+          <div className="p-6 h-full flex flex-col">
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <button 
+              onClick={() => navigate('/')}
+              className="flex items-center text-gray-500 hover:text-gray-900 transition-colors mb-8 mt-2 text-sm font-medium w-fit"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1.5" />
+              Back to Planner
+            </button>
+            
+            <h1 className="text-xl font-bold tracking-tight text-gray-900 mb-1 leading-snug">
+              {itinerary.title}
+            </h1>
+            <p className="text-gray-500 text-sm mb-8">
+              Near <span className="font-medium text-gray-800">{itinerary.preferences.stayLocation.name}</span>
+            </p>
 
-              <div className="space-y-8">
-                {day.slots.map((slot, idx) => (
-                  <div key={idx} className="relative flex gap-6 group">
-                    {/* Time & Dot */}
-                    <div className="flex flex-col items-center z-10">
-                      <div className="w-10 h-10 rounded-full bg-white border-4 border-primary-100 flex items-center justify-center shadow-sm">
-                        <div className="w-2.5 h-2.5 rounded-full bg-primary-500"></div>
-                      </div>
-                    </div>
-
-                    {/* Content Card */}
-                    <div className="flex-1">
-                      {/* Travel indicator from previous */}
-                      {slot.travelFromPrev && slot.travelFromPrev.minutes > 0 && (
-                        <div className="absolute -top-6 left-12 text-xs font-semibold text-slate-400 flex items-center bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
-                          <Navigation className="w-3 h-3 mr-1" />
-                          {slot.travelFromPrev.minutes} min drive ({slot.travelFromPrev.km} km)
-                        </div>
-                      )}
-
-                      <div className={`p-5 rounded-2xl border transition-all ${
-                        slot.isMealStop 
-                          ? 'bg-accent-50/50 border-accent-100 hover:border-accent-300' 
-                          : 'bg-white border-slate-200 hover:border-primary-300 hover:shadow-md'
-                      }`}>
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="text-xl font-bold text-slate-900">{slot.place.name}</h3>
-                              {slot.isMealStop && (
-                                <span className="text-[10px] uppercase tracking-wider font-bold bg-accent-100 text-accent-700 px-2 py-0.5 rounded-sm">
-                                  {slot.mealType}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-slate-500 flex items-center">
-                              <Clock className="w-3.5 h-3.5 mr-1" />
-                              {slot.startTime} - {slot.endTime} ({slot.durationMinutes} mins)
-                            </p>
-                          </div>
-                          
-                          {/* Rating Pill */}
-                          {slot.place.rating && slot.place.rating > 0 && (
-                            <div className="flex items-center bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-sm font-bold">
-                              ★ {slot.place.rating}
-                            </div>
-                          )}
-                        </div>
-
-                        {slot.place.description && (
-                          <p className="text-slate-600 text-sm mt-3 leading-relaxed">
-                            {slot.place.description}
-                          </p>
-                        )}
-
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          {slot.place.tags?.map(tag => (
-                            <span key={tag} className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs rounded-md capitalize font-medium">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+            <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Itinerary Days</h3>
+            <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-y-auto -mx-2 px-2 pb-6">
+              {itinerary.days.map((day) => (
+                <button
+                  key={day.dayNumber}
+                  onClick={() => {
+                    setActiveDay(day.dayNumber);
+                    if (!isDesktop) setIsSidebarOpen(false);
+                  }}
+                  className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left flex items-center justify-between group ${
+                    activeDay === day.dayNumber 
+                      ? 'bg-violet-50 text-violet-700' 
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <Calendar className={`w-4 h-4 mr-3 ${activeDay === day.dayNumber ? 'text-violet-500' : 'text-gray-400 group-hover:text-gray-600 transition-colors'}`} />
+                    Day {day.dayNumber}
                   </div>
-                ))}
-              </div>
+                  {activeDay === day.dayNumber && <ChevronRight className="w-4 h-4 text-violet-500" />}
+                </button>
+              ))}
             </div>
           </div>
-        ))}
+        </div>
+
+        {/* --- Overlay --- */}
+        {isSidebarOpen && (
+          <div 
+            className="absolute inset-0 bg-gray-900/20 z-40 backdrop-blur-[1px]"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Left Panel (Timeline) */}
+        <div 
+          className="flex flex-col bg-white z-10 shrink-0 relative self-stretch min-h-0"
+          style={isDesktop ? { width: `${leftRatio * 100}%` } : { width: '100%', height: '50vh' }}
+        >
+          <div className="flex-1 min-h-0 overflow-y-auto relative z-10 bg-white">
+            {currentDayData && (
+              <div className="flex flex-col min-h-full">
+                
+                {/* Timeline Header with Hamburger */}
+                <div className="flex items-center justify-between pb-3 pt-4 px-5 sm:px-8 border-b border-gray-100 bg-white/95 backdrop-blur-md sticky top-0 z-30">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setIsSidebarOpen(true)} 
+                      className="p-1.5 -ml-1.5 rounded-md hover:bg-gray-100 text-gray-600 transition-colors"
+                      title="Open Trip Menu"
+                    >
+                      <Menu className="w-5 h-5" />
+                    </button>
+                    <h2 className="text-lg font-bold text-gray-900 tracking-tight">Day {currentDayData.dayNumber} Plan</h2>
+                  </div>
+
+                  <div className="flex gap-4 text-xs font-semibold text-gray-500">
+                    <span className="flex items-center"><Navigation className="w-3.5 h-3.5 mr-1 text-violet-500" /> {currentDayData.summary.totalTravelKm} km</span>
+                    <span className="hidden sm:flex items-center"><MapIcon className="w-3.5 h-3.5 mr-1 text-violet-500" /> {currentDayData.summary.region}</span>
+                  </div>
+                </div>
+
+                <div className="relative px-5 sm:px-8 pt-6 pb-12 flex-1">
+                  <div className="absolute left-[39px] sm:left-[51px] top-8 bottom-12 w-px bg-gray-100"></div>
+                  <div className="space-y-8">
+                    {currentDayData.slots.map((slot, idx) => (
+                      <div key={idx} className="relative flex gap-4 group">
+                        <div className="flex flex-col items-center z-10 shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-white border-2 border-violet-100 flex items-center justify-center shadow-sm">
+                            <div className="w-2.5 h-2.5 rounded-full bg-violet-500"></div>
+                          </div>
+                        </div>
+
+                        <div className="flex-1 min-w-0 pt-0.5">
+                          <PlaceCard slot={slot as any} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Resizer Handle */}
+        {isDesktop && (
+          <div 
+            className="w-1.5 hover:w-2 bg-gray-50 border-x border-gray-200 hover:bg-violet-500 hover:border-violet-500 cursor-col-resize z-20 transition-all flex items-center justify-center shrink-0 group relative self-stretch"
+            onMouseDown={() => {
+              isDragging.current = true;
+              document.body.style.cursor = 'col-resize';
+              document.body.style.userSelect = 'none';
+            }}
+          >
+            <div className="absolute inset-y-0 -left-2 -right-2 z-30" />
+            <div className="w-0.5 h-8 bg-gray-300 group-hover:bg-white rounded-full"></div>
+          </div>
+        )}
+
+        {/* Right Panel (Map) */}
+        <div 
+          className="relative z-0 bg-gray-100 shrink-0 self-stretch min-h-[400px] md:min-h-0"
+          style={isDesktop ? { width: `${(1 - leftRatio) * 100}%` } : { width: '100%' }}
+        >
+          <RouteMap 
+            places={placesForMap} 
+            routeGeometry={routeGeometry} 
+            stayLocation={itinerary.preferences.stayLocation as any} 
+          />
+        </div>
+
       </div>
+
+      {/* Bottom Margin */}
+      <div className="h-4 shrink-0 w-full" />
+      
     </div>
   );
 }
