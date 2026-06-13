@@ -17,7 +17,7 @@ export interface SlotInfo {
   travelFromPrev?: { minutes: number; km: number } | null;
 }
 
-export function PlaceCard({ slot }: { slot: SlotInfo }) {
+export function PlaceCard({ slot, onClick }: { slot: SlotInfo; onClick?: () => void }) {
   const { place, isMealStop } = slot;
   
   // High quality placeholder based on type
@@ -28,7 +28,9 @@ export function PlaceCard({ slot }: { slot: SlotInfo }) {
   const imageUrl = place.imageUrl || fallbackImage;
 
   return (
-    <div className={`group/card relative flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-5 bg-white rounded-2xl border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${
+    <div 
+      onClick={onClick}
+      className={`group/card relative flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-5 bg-white rounded-2xl border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${onClick ? 'cursor-pointer' : ''} ${
       isMealStop ? 'border-orange-200/60 bg-orange-50/10 hover:border-orange-300' : 'border-gray-200 hover:border-violet-300'
     }`}>
       

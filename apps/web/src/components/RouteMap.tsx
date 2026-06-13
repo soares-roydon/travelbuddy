@@ -27,17 +27,20 @@ interface RouteMapProps {
   places: SchedulablePlace[];
   routeGeometry?: string;
   stayLocation?: { latitude: number; longitude: number; name?: string };
+  selectedPlaceId?: string | null;
 }
 
-// Component to dynamically fit bounds to markers
-function MapBoundsUpdater({ points }: { points: [number, number][] }) {
+// Component to dynamically fit bounds to markers or fly to a selected place
+function MapBoundsUpdater({ points, selectedPlace, isSelected }: { points: [number, number][], selectedPlace?: [number, number], isSelected: boolean }) {
   const map = useMap();
   useEffect(() => {
-    if (points.length > 0) {
+    if (isSelected && selectedPlace) {
+      map.flyTo(selectedPlace, 15, { animate: true, duration: 1.5 });
+    } else if (points.length > 0) {
       const bounds = L.latLngBounds(points);
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
     }
-  }, [map, points]);
+  }, [map, points, selectedPlace, isSelected]);
   return null;
 }
 
@@ -54,7 +57,7 @@ function MapResizer() {
   return null;
 }
 
-export default function RouteMap({ places, routeGeometry, stayLocation }: RouteMapProps) {
+export default function RouteMap({ places, routeGeometry, stayLocation, selectedPlaceId }: RouteMapProps) {
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
 
   useEffect(() => {
@@ -84,6 +87,12 @@ export default function RouteMap({ places, routeGeometry, stayLocation }: RouteM
   
   // Add polyline points to bounds if they exist
   routeCoordinates.forEach(coord => allPoints.push(coord));
+
+  // Find selected place coordinates
+  const selectedPlaceData = selectedPlaceId ? places.find(p => p.id === selectedPlaceId) : null;
+  const selectedPlaceCoords: [number, number] | undefined = selectedPlaceData && typeof selectedPlaceData.latitude === 'number'
+    ? [selectedPlaceData.latitude, selectedPlaceData.longitude]
+    : undefined;
 
   // Default center (Goa)
   const center: [number, number] = hasValidStay 
@@ -141,7 +150,11 @@ export default function RouteMap({ places, routeGeometry, stayLocation }: RouteM
           />
         )}
 
-        <MapBoundsUpdater points={allPoints} />
+        <MapBoundsUpdater 
+          points={allPoints} 
+          selectedPlace={selectedPlaceCoords}
+          isSelected={!!selectedPlaceId}
+        />
       </MapContainer>
     </div>
   );

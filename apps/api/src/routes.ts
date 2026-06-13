@@ -29,8 +29,8 @@ router.post('/generate', async (req, res) => {
     } catch (dbError) {
       console.warn('⚠️ Database connection failed or empty, using fallback seed data:', dbError);
       // Fallback to in-memory mock data if Supabase is unreachable
-      allPlaces = SEED_PLACES;
-      allRestaurants = SEED_PLACES.filter(p => p.type === 'RESTAURANT');
+      allPlaces = SEED_PLACES.map((p, i) => ({ ...p, id: `seed-${i}` }));
+      allRestaurants = allPlaces.filter(p => p.type === 'RESTAURANT');
     }
 
     // 3. Filter Places based on preferences

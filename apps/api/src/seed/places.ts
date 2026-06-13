@@ -1,4 +1,7 @@
 import { PlaceType, BudgetTier, MealType, GoaRegion } from '../generated/prisma/client.js';
+import { nightlifeAndHeritageSeedData } from './scratch_nightlife_heritage.js';
+import { SCRATCH_PLACES } from './scratch_attractions.js';
+import { SCRATCH_RESTAURANTS } from './scratch_restaurants.js';
 
 export interface SeedPlace {
   name: string;
@@ -1079,4 +1082,7 @@ export const SEED_PLACES: SeedPlace[] = [
     rating: 4.2,
     reviewCount: 3600,
   },
+  ...nightlifeAndHeritageSeedData,
+  ...SCRATCH_PLACES,
+  ...SCRATCH_RESTAURANTS,
 ];

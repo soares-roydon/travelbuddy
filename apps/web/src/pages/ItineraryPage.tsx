@@ -4,11 +4,14 @@ import { useItineraryStore } from '../store/itineraryStore';
 import { ArrowLeft, Clock, Map as MapIcon, Navigation, Calendar, Menu, X, ChevronRight } from 'lucide-react';
 import RouteMap from '../components/RouteMap';
 import { PlaceCard } from '../components/PlaceCard';
+import type { SlotInfo } from '../components/PlaceCard';
+import { PlaceDetailsView } from '../components/PlaceDetailsView';
 
 export default function ItineraryPage() {
   const navigate = useNavigate();
   const itinerary = useItineraryStore((state) => state.currentItinerary);
   const [activeDay, setActiveDay] = useState(1);
+  const [selectedSlot, setSelectedSlot] = useState<SlotInfo | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [leftRatio, setLeftRatio] = useState(0.5);
@@ -137,7 +140,12 @@ export default function ItineraryPage() {
           style={isDesktop ? { width: `${leftRatio * 100}%` } : { width: '100%', height: '50vh' }}
         >
           <div className="flex-1 min-h-0 overflow-y-auto relative z-10 bg-white">
-            {currentDayData && (
+            {selectedSlot ? (
+              <PlaceDetailsView 
+                slot={selectedSlot} 
+                onBack={() => setSelectedSlot(null)} 
+              />
+            ) : currentDayData && (
               <div className="flex flex-col min-h-full">
                 
                 {/* Timeline Header with Hamburger */}
@@ -171,7 +179,10 @@ export default function ItineraryPage() {
                         </div>
 
                         <div className="flex-1 min-w-0 pt-0.5">
-                          <PlaceCard slot={slot as any} />
+                          <PlaceCard 
+                            slot={slot as any} 
+                            onClick={() => setSelectedSlot(slot as any)}
+                          />
                         </div>
                       </div>
                     ))}
@@ -205,7 +216,8 @@ export default function ItineraryPage() {
           <RouteMap 
             places={placesForMap} 
             routeGeometry={routeGeometry} 
-            stayLocation={itinerary.preferences.stayLocation as any} 
+            stayLocation={itinerary.preferences.stayLocation as any}
+            selectedPlaceId={selectedSlot?.place.id} 
           />
         </div>
 

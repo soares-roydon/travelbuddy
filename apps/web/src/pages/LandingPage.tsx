@@ -9,8 +9,13 @@ const INTERESTS = [
   { id: 'fort', label: 'Forts', icon: '🏰' },
   { id: 'waterfall', label: 'Waterfalls', icon: '🌊' },
   { id: 'temple', label: 'Temples', icon: '⛪' },
+  { id: 'church', label: 'Churches', icon: '⛪' },
+  { id: 'nature', label: 'Nature & Treks', icon: '🌿' },
+  { id: 'viewpoint', label: 'Viewpoints', icon: '🏔️' },
+  { id: 'water-sports', label: 'Water Sports', icon: '🏄' },
   { id: 'nightlife', label: 'Nightlife', icon: '🍹' },
   { id: 'market', label: 'Markets', icon: '🛍️' },
+  { id: 'heritage', label: 'Heritage', icon: '🏛️' },
 ];
 
 const LOCATIONS = [
@@ -38,7 +43,11 @@ function CustomSelect({ value, options, onChange }: { value: any, options: {labe
           {options.map(o => (
             <div 
               key={o.label} 
-              onClick={() => { onChange(o.value); setOpen(false); }} 
+              onMouseDown={(e) => { 
+                e.preventDefault(); 
+                onChange(o.value); 
+                setOpen(false); 
+              }} 
               className="px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 cursor-pointer transition-colors"
             >
               {o.label}
