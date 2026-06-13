@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { useItineraryStore } from '../store/itineraryStore';
 import type { Preferences } from '@travelbuddy/shared';
+import { supabase } from '../lib/supabase';
 
 const INTERESTS = [
   { id: 'beach', label: 'Beaches', icon: '🏖️' },
@@ -33,13 +34,13 @@ function CustomSelect({ value, options, onChange }: { value: any, options: {labe
         type="button" 
         onClick={() => setOpen(!open)} 
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        className="w-full text-left flex justify-between items-center border border-gray-200 rounded-md px-3 h-10 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+        className="w-full text-left flex justify-between items-center border border-gray-200 rounded-lg px-3 h-10 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
       >
         {options.find(o => o.value === value)?.label}
         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
       </button>
       {open && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
           {options.map(o => (
             <div 
               key={o.label} 
@@ -78,10 +79,20 @@ export default function LandingPage() {
 
   const generateMutation = useMutation({
     mutationFn: async (prefs: Preferences) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const payload = {
+        ...prefs,
+        userId: session?.user?.id || undefined,
+      };
+
+      const token = localStorage.getItem('jwt_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch('http://localhost:3001/api/itinerary/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(prefs),
+        headers,
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Failed to generate itinerary');
       return res.json();
@@ -105,7 +116,7 @@ export default function LandingPage() {
     <div className="w-full min-h-[calc(100vh-56px)] flex flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-lg flex flex-col">
         {/* Form Section */}
-        <div className="w-full bg-white border border-gray-200 rounded-xl p-8 sm:p-10 shadow-sm">
+        <div className="w-full bg-white border border-gray-200 rounded-2xl p-8 sm:p-10 shadow-sm">
           <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); generateMutation.mutate(preferences); }}>
             
             <div className="grid grid-cols-2 gap-6">
@@ -160,7 +171,7 @@ export default function LandingPage() {
                       key={interest.id}
                       type="button"
                       onClick={() => toggleInterest(interest.id)}
-                      className={`px-3 h-8 text-sm rounded-md border transition-colors flex items-center gap-1.5 ${
+                      className={`px-3 h-8 text-sm rounded-lg border transition-colors flex items-center gap-1.5 ${
                         isSelected
                           ? 'border-violet-500 bg-violet-50 text-violet-700'
                           : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
@@ -193,7 +204,7 @@ export default function LandingPage() {
             <button
               type="submit"
               disabled={generateMutation.isPending || preferences.interests.length === 0}
-              className="w-full flex items-center justify-center h-10 text-sm font-medium text-white transition-colors bg-violet-500 rounded-md hover:bg-violet-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="w-full flex items-center justify-center h-10 text-sm font-medium text-white transition-colors bg-violet-500 rounded-lg hover:bg-violet-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
               {generateMutation.isPending ? 'Generating...' : 'Generate Itinerary'}
             </button>

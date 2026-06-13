@@ -1,18 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Loader2 } from 'lucide-react';
 
 export default function AuthPage() {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [isSignUp, setIsSignUp] = useState(location.state?.isSignUp || false);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  
-  const navigate = useNavigate();
-  const location = useLocation();
+
+  useEffect(() => {
+    setIsSignUp(location.state?.isSignUp || false);
+  }, [location.state]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +32,9 @@ export default function AuthPage() {
           password,
           options: {
             emailRedirectTo: window.location.origin,
+            data: {
+              full_name: name,
+            },
           },
         });
         if (error) throw error;
@@ -121,11 +129,25 @@ export default function AuthPage() {
             <div className="w-full border-t border-gray-200"></div>
           </div>
           <div className="relative flex justify-center text-[12px] uppercase">
-            <span className="bg-white px-2 text-gray-500 font-semibold tracking-wider">Or continue with</span>
+            <span className="bg-white px-2 text-gray-500 font-semibold tracking-wider">Or continue with email</span>
           </div>
         </div>
 
         <form onSubmit={handleEmailAuth} className="space-y-4">
+          {isSignUp && (
+            <div className="space-y-1.5">
+              <label className="block text-[14px] font-medium text-gray-700">Full Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required={isSignUp}
+                className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-[14px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-colors"
+                placeholder="John Doe"
+              />
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <label className="block text-[14px] font-medium text-gray-700">Email</label>
             <input

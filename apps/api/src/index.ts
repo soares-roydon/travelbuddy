@@ -13,6 +13,34 @@ app.use(express.json());
 // ── API Routes ──
 app.use('/api/itinerary', itineraryRoutes);
 
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+
+app.post('/api/auth/sync', async (req, res) => {
+  try {
+    const { id, email, name, avatarUrl } = req.body;
+    
+    if (!id || !email) {
+      res.status(400).json({ error: 'Missing required user data' });
+      return;
+    }
+
+    const user = await prisma.user.upsert({
+      where: { id },
+      update: { email, name, avatarUrl },
+      create: { id, email, name, avatarUrl },
+    });
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({ success: true, user, token });
+  } catch (error) {
+    console.error('Failed to sync user:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ── Health Check ──
 app.get('/api/health', (_req, res) => {
   res.json({

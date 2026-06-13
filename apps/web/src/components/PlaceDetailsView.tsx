@@ -33,12 +33,6 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
 
   return (
     <div className="flex flex-col min-h-full bg-white relative">
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="absolute inset-0 z-50 bg-white/70 backdrop-blur-sm flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
-        </div>
-      )}
       
       {/* Header / Nav */}
       <div className="absolute top-0 left-0 right-0 z-20 p-4 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
@@ -51,12 +45,16 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
       </div>
 
       {/* Hero Image */}
-      <div className="w-full h-64 sm:h-80 shrink-0 relative">
-        <img 
-          src={imageUrl} 
-          alt={place.name}
-          className="w-full h-full object-cover"
-        />
+      <div className="w-full h-64 sm:h-80 shrink-0 relative bg-gray-800">
+        {isLoading ? (
+          <div className="w-full h-full bg-gray-700 animate-pulse" />
+        ) : (
+          <img 
+            src={imageUrl} 
+            alt={place.name}
+            className="w-full h-full object-cover transition-opacity duration-500"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         
         <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -95,7 +93,9 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
               <Star className="w-4 h-4 mr-1.5" />
               <span className="text-sm font-medium">Rating</span>
             </div>
-            {place.rating ? (
+            {isLoading ? (
+              <div className="mt-2 h-5 w-16 bg-gray-200 rounded animate-pulse"></div>
+            ) : place.rating ? (
               <>
                 <p className="text-gray-900 font-medium">{place.rating} / 5.0</p>
                 <p className="text-gray-500 text-xs mt-0.5">Based on reviews</p>
@@ -109,9 +109,17 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
         {/* Description */}
         <div className="mb-8">
           <h2 className="text-[16px] font-semibold text-gray-900 mb-3 tracking-tight">About this place</h2>
-          <p className="text-[14px] text-gray-600 leading-relaxed">
-            {place.description || 'No description available for this place.'}
-          </p>
+          {isLoading ? (
+            <div className="space-y-2 mt-2">
+              <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-4/6 animate-pulse"></div>
+            </div>
+          ) : (
+            <p className="text-[14px] text-gray-600 leading-relaxed">
+              {place.description || 'No description available for this place.'}
+            </p>
+          )}
         </div>
 
         {/* Location Info */}
@@ -139,11 +147,17 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
         </div>
 
         {/* Tags */}
-        {place.tags && place.tags.length > 0 && (
+        {(place.tags && place.tags.length > 0) || isLoading ? (
           <div>
             <h2 className="text-[16px] font-semibold text-gray-900 mb-3 tracking-tight">Tags</h2>
             <div className="flex flex-wrap gap-2">
-              {place.tags.map(tag => (
+              {isLoading ? (
+                <>
+                  <div className="h-8 w-20 bg-gray-200 rounded-lg animate-pulse"></div>
+                  <div className="h-8 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+                  <div className="h-8 w-16 bg-gray-200 rounded-lg animate-pulse"></div>
+                </>
+              ) : place.tags?.map(tag => (
                 <span key={tag} className="flex items-center px-3 py-1.5 bg-gray-50 text-gray-600 text-sm font-medium rounded-lg capitalize border border-gray-100">
                   <Tag className="w-3 h-3 mr-1.5 text-gray-400" />
                   {tag}
@@ -151,7 +165,7 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
               ))}
             </div>
           </div>
-        )}
+        ) : null}
         
       </div>
     </div>
