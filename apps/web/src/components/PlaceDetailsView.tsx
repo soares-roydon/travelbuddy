@@ -62,15 +62,15 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
         <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="flex items-center gap-3 mb-2">
             {isMealStop && (
-              <span className="text-xs font-bold uppercase tracking-wider text-white bg-orange-500 px-2.5 py-1 rounded-md">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-white bg-orange-500 px-2.5 py-1 rounded-md">
                 {slot.mealType}
               </span>
             )}
-            <span className="text-xs font-medium text-white/90 uppercase tracking-wider bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-md">
+            <span className="text-[11px] font-semibold text-white/90 uppercase tracking-wider bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-md">
               {place.type}
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
+          <h1 className="text-3xl font-semibold text-white leading-tight tracking-tight">
             {place.name}
           </h1>
         </div>
@@ -84,7 +84,7 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
             <div className="flex items-center text-violet-600 mb-1">
               <Clock className="w-4 h-4 mr-1.5" />
-              <span className="text-sm font-semibold">Scheduled Time</span>
+              <span className="text-sm font-medium">Scheduled Time</span>
             </div>
             <p className="text-gray-900 font-medium">{slot.startTime} - {slot.endTime}</p>
             <p className="text-gray-500 text-xs mt-0.5">{slot.durationMinutes} minutes</p>
@@ -93,7 +93,7 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
             <div className="flex items-center text-amber-600 mb-1">
               <Star className="w-4 h-4 mr-1.5" />
-              <span className="text-sm font-semibold">Rating</span>
+              <span className="text-sm font-medium">Rating</span>
             </div>
             {place.rating ? (
               <>
@@ -108,21 +108,21 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
 
         {/* Description */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-3">About this place</h2>
-          <p className="text-gray-600 leading-relaxed">
+          <h2 className="text-[16px] font-semibold text-gray-900 mb-3 tracking-tight">About this place</h2>
+          <p className="text-[14px] text-gray-600 leading-relaxed">
             {place.description || 'No description available for this place.'}
           </p>
         </div>
 
         {/* Location Info */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-3">Location & Travel</h2>
+          <h2 className="text-[16px] font-semibold text-gray-900 mb-3 tracking-tight">Location & Travel</h2>
           <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-4">
             <div className="flex items-start">
               <MapPin className="w-5 h-5 text-gray-400 mr-3 mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Region</p>
-                <p className="text-sm text-gray-600">{place.region || 'Goa'}</p>
+                <p className="text-[14px] font-medium text-gray-900">Region</p>
+                <p className="text-[14px] text-gray-600">{place.region || 'Goa'}</p>
               </div>
             </div>
             
@@ -130,8 +130,8 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
               <div className="flex items-start">
                 <Navigation className="w-5 h-5 text-violet-500 mr-3 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Travel from previous stop</p>
-                  <p className="text-sm text-gray-600">{slot.travelFromPrev.minutes} minutes ({slot.travelFromPrev.km} km) driving</p>
+                  <p className="text-[14px] font-medium text-gray-900">Travel from previous stop</p>
+                  <p className="text-[14px] text-gray-600">{slot.travelFromPrev.minutes} minutes ({slot.travelFromPrev.km} km) driving</p>
                 </div>
               </div>
             )}
@@ -141,7 +141,7 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
         {/* Tags */}
         {place.tags && place.tags.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">Tags</h2>
+            <h2 className="text-[16px] font-semibold text-gray-900 mb-3 tracking-tight">Tags</h2>
             <div className="flex flex-wrap gap-2">
               {place.tags.map(tag => (
                 <span key={tag} className="flex items-center px-3 py-1.5 bg-gray-50 text-gray-600 text-sm font-medium rounded-lg capitalize border border-gray-100">

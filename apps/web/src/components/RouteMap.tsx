@@ -1,27 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { decode } from '@googlemaps/polyline-codec';
 import type { SchedulablePlace } from '@travelbuddy/shared';
 
-// Fix for default Leaflet icon path issues in React
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+const createMarkerIcon = (color: string, size: number, isSelected: boolean) => {
+  const shadowClass = isSelected ? 'drop-shadow-lg' : 'drop-shadow-md';
+  return L.divIcon({
+    html: `
+      <div class="flex items-center justify-center relative transition-transform duration-300 ${isSelected ? 'scale-125 origin-bottom' : ''}">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: ${size}px; height: ${size}px;" class="${shadowClass}">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
+          <circle cx="12" cy="9" r="2.5" fill="white" stroke="none"></circle>
+        </svg>
+      </div>
+    `,
+    className: 'bg-transparent border-none',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size],
+    tooltipAnchor: [0, -size]
+  });
+};
 
-// Custom Icon for Restaurants
-const restaurantIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
+// All markers use the exact same base size so they remain consistent.
+// The selected one uses CSS scale-125 to gently pop out without altering the base SVG dimensions.
+const defaultIcon = createMarkerIcon('#8b5cf6', 40, false);
+const restaurantIcon = createMarkerIcon('#f97316', 40, false);
+const selectedIcon = createMarkerIcon('#ef4444', 40, true);
+const baseIcon = createMarkerIcon('#3b82f6', 40, false);
 
 interface RouteMapProps {
   places: SchedulablePlace[];
@@ -117,11 +125,14 @@ export default function RouteMap({ places, routeGeometry, stayLocation, selected
           <Marker 
             position={[stayLocation.latitude, stayLocation.longitude]}
             title="Stay Location"
+            icon={baseIcon}
           >
-            <Popup>
-              <strong>Hotel / Stay</strong><br/>
-              {stayLocation.name || 'Your Base'}
-            </Popup>
+            <Tooltip direction="top" opacity={1}>
+              <div className="text-center">
+                <strong>Hotel / Stay</strong><br/>
+                {stayLocation.name || 'Your Base'}
+              </div>
+            </Tooltip>
           </Marker>
         )}
 
@@ -129,16 +140,24 @@ export default function RouteMap({ places, routeGeometry, stayLocation, selected
           // Guard against invalid place coordinates
           if (typeof place.latitude !== 'number' || typeof place.longitude !== 'number' || isNaN(place.latitude)) return null;
           
+          const isSelected = place.id === selectedPlaceId;
+          const currentIcon = isSelected 
+            ? selectedIcon 
+            : (place.type === 'RESTAURANT' ? restaurantIcon : defaultIcon);
+
           return (
             <Marker 
               key={place.id ? `${place.id}-${idx}` : `marker-${idx}`} 
               position={[place.latitude, place.longitude]}
-              icon={place.type === 'RESTAURANT' ? restaurantIcon : new L.Icon.Default()}
+              icon={currentIcon}
+              zIndexOffset={isSelected ? 1000 : 0}
             >
-              <Popup>
-                <strong>{idx + 1}. {place.name}</strong><br/>
-                {place.estimatedDurationMinutes} mins
-              </Popup>
+              <Tooltip direction="top" opacity={1}>
+                <div className="text-center">
+                  <strong>{idx + 1}. {place.name}</strong><br/>
+                  <span className="text-gray-500">{place.estimatedDurationMinutes} mins</span>
+                </div>
+              </Tooltip>
             </Marker>
           );
         })}

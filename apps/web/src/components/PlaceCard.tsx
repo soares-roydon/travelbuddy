@@ -58,11 +58,11 @@ export function PlaceCard({ slot, onClick }: { slot: SlotInfo; onClick?: () => v
           <div className="flex justify-between items-start mb-3 gap-4">
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900 leading-tight">
+                <h3 className="text-[16px] font-semibold text-gray-900 leading-tight tracking-tight">
                   {place.name}
                 </h3>
                 {isMealStop && (
-                  <span className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-orange-700 bg-orange-100 px-2.5 py-0.5 rounded-md border border-orange-200/50">
+                  <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-orange-700 bg-orange-100 px-2.5 py-0.5 rounded-md border border-orange-200/50">
                     {slot.mealType}
                   </span>
                 )}

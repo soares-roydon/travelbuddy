@@ -26,12 +26,12 @@ export function Navbar() {
             <Link to="/" className="text-sm font-medium text-gray-500 hover:text-black transition-colors">My Itineraries</Link>
             
             <div className="flex items-center gap-3 pl-6 border-l border-gray-200">
-              <button className="text-sm font-medium text-gray-600 hover:text-black border border-gray-200 rounded-md px-3 h-8 transition-colors">
+              <Link to="/auth" className="flex items-center justify-center text-sm font-medium text-gray-600 hover:text-black border border-gray-200 rounded-md px-3 h-8 transition-colors">
                 Log in
-              </button>
-              <button className="bg-violet-500 hover:bg-violet-600 text-white px-3 h-8 rounded-md text-sm font-medium transition-colors">
+              </Link>
+              <Link to="/auth" className="flex items-center justify-center bg-violet-500 hover:bg-violet-600 text-white px-3 h-8 rounded-md text-sm font-medium transition-colors">
                 Sign up
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -54,12 +54,12 @@ export function Navbar() {
             <Link to="/" onClick={() => setIsOpen(false)} className="block px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-black">Destinations</Link>
             <Link to="/" onClick={() => setIsOpen(false)} className="block px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-black">My Itineraries</Link>
             <div className="pt-4 mt-2 border-t border-gray-200 flex flex-col gap-2 px-3">
-              <button className="w-full border border-gray-200 text-black px-4 h-8 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+              <Link to="/auth" onClick={() => setIsOpen(false)} className="flex items-center justify-center w-full border border-gray-200 text-black px-4 h-8 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
                 Log in
-              </button>
-              <button className="w-full bg-violet-500 text-white px-4 h-8 rounded-md text-sm font-medium hover:bg-violet-600 transition-colors">
+              </Link>
+              <Link to="/auth" onClick={() => setIsOpen(false)} className="flex items-center justify-center w-full bg-violet-500 text-white px-4 h-8 rounded-md text-sm font-medium hover:bg-violet-600 transition-colors">
                 Sign up
-              </button>
+              </Link>
             </div>
           </div>
         </div>

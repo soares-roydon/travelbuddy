@@ -93,14 +93,14 @@ export default function ItineraryPage() {
               Back to Planner
             </button>
             
-            <h1 className="text-xl font-bold tracking-tight text-gray-900 mb-1 leading-snug">
+            <h1 className="text-[20px] font-semibold tracking-tight text-gray-900 mb-1">
               {itinerary.title}
             </h1>
             <p className="text-gray-500 text-sm mb-8">
               Near <span className="font-medium text-gray-800">{itinerary.preferences.stayLocation.name}</span>
             </p>
 
-            <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Itinerary Days</h3>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Itinerary Days</h3>
             <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-y-auto -mx-2 px-2 pb-6">
               {itinerary.days.map((day) => (
                 <button
@@ -109,7 +109,7 @@ export default function ItineraryPage() {
                     setActiveDay(day.dayNumber);
                     if (!isDesktop) setIsSidebarOpen(false);
                   }}
-                  className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left flex items-center justify-between group ${
+                  className={`px-3 py-2.5 rounded-md text-sm font-medium transition-all text-left flex items-center justify-between group ${
                     activeDay === day.dayNumber 
                       ? 'bg-violet-50 text-violet-700' 
                       : 'bg-white text-gray-600 hover:bg-gray-50'
@@ -158,7 +158,7 @@ export default function ItineraryPage() {
                     >
                       <Menu className="w-5 h-5" />
                     </button>
-                    <h2 className="text-lg font-bold text-gray-900 tracking-tight">Day {currentDayData.dayNumber} Plan</h2>
+                    <h2 className="text-[18px] font-semibold text-gray-900 tracking-tight">Day {currentDayData.dayNumber} Plan</h2>
                   </div>
 
                   <div className="flex gap-4 text-xs font-semibold text-gray-500">
