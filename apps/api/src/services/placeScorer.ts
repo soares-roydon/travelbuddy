@@ -41,7 +41,11 @@ export class PlaceScorer {
       // 4. ProximityScore (15%)
       let proximityScore = 0.5;
       if (preferences.stayLocation) {
-        const distKm = getHaversineDistanceMeters(preferences.stayLocation, place) / 1000;
+        const safeStayLocation = {
+          latitude: preferences.stayLocation.latitude ?? 15.2993,
+          longitude: preferences.stayLocation.longitude ?? 74.1240,
+        };
+        const distKm = getHaversineDistanceMeters(safeStayLocation, place) / 1000;
         if (distKm < 15) {
           proximityScore = 1.0;
         } else if (distKm <= 30) {
