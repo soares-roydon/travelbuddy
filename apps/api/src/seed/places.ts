@@ -1,4 +1,4 @@
-import { PlaceType, BudgetTier, MealType, GoaRegion } from '../generated/prisma/client.js';
+import { PlaceType, BudgetTier, MealType, GoaRegion } from '@prisma/client';
 import { nightlifeAndHeritageSeedData } from './scratch_nightlife_heritage.js';
 import { SCRATCH_PLACES } from './scratch_attractions.js';
 import { SCRATCH_RESTAURANTS } from './scratch_restaurants.js';

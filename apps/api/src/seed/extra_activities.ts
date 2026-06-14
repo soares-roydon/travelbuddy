@@ -12,7 +12,7 @@
  * cooking class) that may need to be added to categories.ts if not present.
  */
 
-import { PlaceType, BudgetTier, MealType, GoaRegion } from '../generated/prisma/client.js';
+import { PlaceType, BudgetTier, MealType, GoaRegion } from '@prisma/client';
 import { SeedPlace } from './places.js';
 
 export const EXTRA_ACTIVITIES: SeedPlace[] = [
