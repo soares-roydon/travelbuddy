@@ -2,6 +2,9 @@ import { PlaceType, BudgetTier, MealType, GoaRegion } from '../generated/prisma/
 import { nightlifeAndHeritageSeedData } from './scratch_nightlife_heritage.js';
 import { SCRATCH_PLACES } from './scratch_attractions.js';
 import { SCRATCH_RESTAURANTS } from './scratch_restaurants.js';
+import { EXTRA_ATTRACTIONS } from './extra_attractions.js';
+import { EXTRA_RESTAURANTS } from './extra_restaurants.js';
+import { EXTRA_ACTIVITIES } from './extra_activities.js';
 
 export interface SeedPlace {
   name: string;
@@ -1085,4 +1088,7 @@ export const SEED_PLACES: SeedPlace[] = [
   ...nightlifeAndHeritageSeedData,
   ...SCRATCH_PLACES,
   ...SCRATCH_RESTAURANTS,
+  ...EXTRA_ATTRACTIONS,
+  ...EXTRA_RESTAURANTS,
+  ...EXTRA_ACTIVITIES,
 ];

@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, Tooltip } from 'react-leaflet';
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Polyline, useMap, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { decode } from '@googlemaps/polyline-codec';
 import type { SchedulablePlace } from '@travelbuddy/shared';
+import { GeoJSON } from 'react-leaflet';
+import goaData from '../data/goa.json';
 
 const createMarkerIcon = (color: string, size: number, isSelected: boolean) => {
   const shadowClass = isSelected ? 'drop-shadow-lg' : 'drop-shadow-md';
@@ -36,19 +38,52 @@ interface RouteMapProps {
   routeGeometry?: string;
   stayLocation?: { latitude: number; longitude: number; name?: string };
   selectedPlaceId?: string | null;
+  isVisible?: boolean;
+}
+
+// Component to render rich tooltip content with image skeleton
+function MapTooltipContent({ place, idx }: { place: any, idx: number }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  
+  return (
+    <div className="flex flex-col w-48 overflow-hidden rounded-xl shadow-xl bg-white border border-gray-100">
+      {place.imageUrl && (
+        <div className="w-full h-28 relative bg-gray-100">
+          {!imgLoaded && (
+            <div className="absolute inset-0 animate-pulse bg-gray-200" />
+          )}
+          <img 
+            src={place.imageUrl} 
+            alt={place.name} 
+            className={`w-full h-full object-cover transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setImgLoaded(true)}
+          />
+        </div>
+      )}
+      <div className="p-2.5 text-center bg-white">
+        <strong className="block text-[13px] text-gray-900 truncate leading-tight mb-0.5">{idx + 1}. {place.name}</strong>
+        <span className="text-[11px] text-gray-500 font-medium">{place.estimatedDurationMinutes} mins • {place.type === 'RESTAURANT' ? 'Restaurant' : 'Activity'}</span>
+      </div>
+    </div>
+  );
 }
 
 // Component to dynamically fit bounds to markers or fly to a selected place
-function MapBoundsUpdater({ points, selectedPlace, isSelected }: { points: [number, number][], selectedPlace?: [number, number], isSelected: boolean }) {
+function MapBoundsUpdater({ points, selectedPlace, isSelected, isVisible }: { points: [number, number][], selectedPlace?: [number, number], isSelected: boolean, isVisible?: boolean }) {
   const map = useMap();
+  const pointsStr = JSON.stringify(points);
+  
   useEffect(() => {
+    // Prevent Leaflet crash (NaN, NaN) if container is display: none
+    if (map.getSize().x === 0 || map.getSize().y === 0) return;
+
     if (isSelected && selectedPlace) {
       map.flyTo(selectedPlace, 15, { animate: true, duration: 1.5 });
     } else if (points.length > 0) {
       const bounds = L.latLngBounds(points);
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
     }
-  }, [map, points, selectedPlace, isSelected]);
+  }, [map, pointsStr, selectedPlace, isSelected, isVisible]);
   return null;
 }
 
@@ -65,7 +100,7 @@ function MapResizer() {
   return null;
 }
 
-export default function RouteMap({ places, routeGeometry, stayLocation, selectedPlaceId }: RouteMapProps) {
+export default function RouteMap({ places, routeGeometry, stayLocation, selectedPlaceId, isVisible = true }: RouteMapProps) {
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
 
   useEffect(() => {
@@ -107,8 +142,10 @@ export default function RouteMap({ places, routeGeometry, stayLocation, selected
     ? [stayLocation.latitude, stayLocation.longitude] 
     : [15.2993, 74.1240];
 
+  const tileUrl = "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
+
   return (
-    <div className="absolute inset-0 bg-gray-100">
+    <div className="absolute inset-0 bg-gray-100 dark:bg-gray-900 transition-colors">
       <MapContainer 
         center={center} 
         zoom={10} 
@@ -117,9 +154,23 @@ export default function RouteMap({ places, routeGeometry, stayLocation, selected
       >
         <MapResizer />
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          attribution='&copy; Google Maps'
+          url={tileUrl}
         />
+        
+        {goaData && (
+          <GeoJSON 
+            data={goaData as any} 
+            style={{
+              color: '#8b5cf6',
+              weight: 2,
+              opacity: 0.5,
+              fillColor: '#8b5cf6',
+              fillOpacity: 0.05,
+              dashArray: '5, 5'
+            }}
+          />
+        )}
         
         {hasValidStay && (
           <Marker 
@@ -152,11 +203,8 @@ export default function RouteMap({ places, routeGeometry, stayLocation, selected
               icon={currentIcon}
               zIndexOffset={isSelected ? 1000 : 0}
             >
-              <Tooltip direction="top" opacity={1}>
-                <div className="text-center">
-                  <strong>{idx + 1}. {place.name}</strong><br/>
-                  <span className="text-gray-500">{place.estimatedDurationMinutes} mins</span>
-                </div>
+              <Tooltip direction="top" opacity={1} className="!p-0 !bg-transparent !border-none !shadow-none">
+                <MapTooltipContent place={place} idx={idx} />
               </Tooltip>
             </Marker>
           );
@@ -173,6 +221,7 @@ export default function RouteMap({ places, routeGeometry, stayLocation, selected
           points={allPoints} 
           selectedPlace={selectedPlaceCoords}
           isSelected={!!selectedPlaceId}
+          isVisible={isVisible}
         />
       </MapContainer>
     </div>

@@ -80,15 +80,23 @@ export const DaySummarySchema = z.object({
   totalTravelKm: z.number(),
   totalActivityMinutes: z.number(),
   region: z.string(),
+  theme: z.string().optional(),
 });
 
 // ── Response: Itinerary Day ──
+
+export const DayNarrativeSchema = z.object({
+  title: z.string(),
+  narrative: z.string(),
+  tips: z.array(z.string()),
+});
 
 export const ItineraryDayResponseSchema = z.object({
   dayNumber: z.number(),
   date: z.string().nullable(),
   slots: z.array(ItinerarySlotResponseSchema),
   summary: DaySummarySchema,
+  narrative: DayNarrativeSchema.optional(),
 });
 
 // ── Response: Full Itinerary ──
@@ -96,6 +104,7 @@ export const ItineraryDayResponseSchema = z.object({
 export const ItineraryResponseSchema = z.object({
   id: z.string(),
   title: z.string(),
+  summary: z.string().optional(),
   days: z.array(ItineraryDayResponseSchema),
   preferences: PreferencesSchema,
   createdAt: z.string(),

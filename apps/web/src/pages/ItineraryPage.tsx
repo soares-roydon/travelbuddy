@@ -1,11 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useItineraryStore } from '../store/itineraryStore';
-import { ArrowLeft, Clock, Map as MapIcon, Navigation, Calendar, Menu, X, ChevronRight } from 'lucide-react';
+import { ArrowLeft, List, Map as MapIcon, Navigation, Save } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useMutation } from '@tanstack/react-query';
 import RouteMap from '../components/RouteMap';
 import { PlaceCard } from '../components/PlaceCard';
 import type { SlotInfo } from '../components/PlaceCard';
 import { PlaceDetailsView } from '../components/PlaceDetailsView';
+import { CustomSelect } from '../components/CustomSelect';
+
 
 export default function ItineraryPage() {
   const navigate = useNavigate();
@@ -14,10 +18,10 @@ export default function ItineraryPage() {
   const [selectedSlot, setSelectedSlot] = useState<SlotInfo | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [leftRatio, setLeftRatio] = useState(0.5);
+  const [leftRatio, setLeftRatio] = useState(0.35);
   const isDragging = useRef(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list');
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768);
@@ -47,6 +51,14 @@ export default function ItineraryPage() {
     };
   }, []);
 
+  // Reset scroll position when switching days or opening details
+  useEffect(() => {
+    const container = document.getElementById('timeline-scroll-container');
+    if (container) {
+      container.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeDay, selectedSlot?.place.id]);
+
   if (!itinerary) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6">
@@ -62,84 +74,40 @@ export default function ItineraryPage() {
   const placesForMap = currentDayData?.slots.map(s => s.place) || [];
   const routeGeometry = currentDayData?.slots[0]?.travelFromPrev?.routeGeometry;
 
-  return (
-    <div className="w-full bg-gray-50 flex flex-col items-center px-4 md:px-6 lg:px-8">
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Must be logged in to save');
       
-      {/* Top Margin */}
-      <div className="h-4 shrink-0 w-full" />
+      const res = await fetch('http://localhost:3001/api/itinerary/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(itinerary)
+      });
+      if (!res.ok) throw new Error('Failed to save itinerary');
+      return res.json();
+    },
+    onSuccess: () => alert('Itinerary saved successfully!'),
+    onError: () => alert('Failed to save itinerary. Please ensure you are logged in.')
+  });
 
-      {/* Resizable Split Pane inside Constrained Margins */}
+  return (
+    <div className="w-full h-full flex flex-col bg-white overflow-hidden">
+      {/* Resizable Split Pane */}
       <div 
         ref={containerRef}
-        className="w-full max-w-[1440px] flex flex-col md:flex-row bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden relative shrink-0 min-h-[600px]" 
-        style={{ height: 'calc(100vh - 56px - 32px)' }} // 56px Navbar + 32px (two h-4 margins)
+        className="w-full flex-1 flex flex-col md:flex-row relative shrink-0 min-h-0" 
       >
-
-        {/* --- Collapsible Sidebar Drawer --- */}
-        <div className={`absolute inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 transform transition-all duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full shadow-none'}`}>
-          <div className="p-6 h-full flex flex-col">
-            <button 
-              onClick={() => setIsSidebarOpen(false)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            
-            <button 
-              onClick={() => navigate('/')}
-              className="flex items-center text-gray-500 hover:text-gray-900 transition-colors mb-8 mt-2 text-sm font-medium w-fit"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1.5" />
-              Back to Planner
-            </button>
-            
-            <h1 className="text-[20px] font-semibold tracking-tight text-gray-900 mb-1">
-              {itinerary.title}
-            </h1>
-            <p className="text-gray-500 text-sm mb-8">
-              Near <span className="font-medium text-gray-800">{itinerary.preferences.stayLocation.name}</span>
-            </p>
-
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Itinerary Days</h3>
-            <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-y-auto -mx-2 px-2 pb-6">
-              {itinerary.days.map((day) => (
-                <button
-                  key={day.dayNumber}
-                  onClick={() => {
-                    setActiveDay(day.dayNumber);
-                    if (!isDesktop) setIsSidebarOpen(false);
-                  }}
-                  className={`px-3 py-2.5 rounded-md text-sm font-medium transition-all text-left flex items-center justify-between group ${
-                    activeDay === day.dayNumber 
-                      ? 'bg-violet-50 text-violet-700' 
-                      : 'bg-white text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <Calendar className={`w-4 h-4 mr-3 ${activeDay === day.dayNumber ? 'text-violet-500' : 'text-gray-400 group-hover:text-gray-600 transition-colors'}`} />
-                    Day {day.dayNumber}
-                  </div>
-                  {activeDay === day.dayNumber && <ChevronRight className="w-4 h-4 text-violet-500" />}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* --- Overlay --- */}
-        {isSidebarOpen && (
-          <div 
-            className="absolute inset-0 bg-gray-900/20 z-40 backdrop-blur-[1px]"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
 
         {/* Left Panel (Timeline) */}
         <div 
-          className="flex flex-col bg-white z-10 shrink-0 relative self-stretch min-h-0"
-          style={isDesktop ? { width: `${leftRatio * 100}%` } : { width: '100%', height: '50vh' }}
+          className={`flex flex-col bg-white z-10 shrink-0 relative self-stretch min-h-0 ${!isDesktop && mobileTab !== 'list' ? 'hidden' : 'flex-1 md:flex-none'}`}
+          style={isDesktop ? { width: `${leftRatio * 100}%` } : { width: '100%' }}
         >
-          <div className="flex-1 min-h-0 overflow-y-auto relative z-10 bg-white">
+          <div id="timeline-scroll-container" className="flex-1 min-h-0 overflow-y-auto relative z-10 bg-white">
             {selectedSlot ? (
               <PlaceDetailsView 
                 slot={selectedSlot} 
@@ -148,22 +116,33 @@ export default function ItineraryPage() {
             ) : currentDayData && (
               <div className="flex flex-col min-h-full">
                 
-                {/* Timeline Header with Hamburger */}
+                {/* Timeline Header */}
                 <div className="flex items-center justify-between pb-3 pt-4 px-5 sm:px-8 border-b border-gray-100 bg-white/95 backdrop-blur-md sticky top-0 z-30">
-                  <div className="flex items-center gap-3">
-                    <button 
-                      onClick={() => setIsSidebarOpen(true)} 
-                      className="p-1.5 -ml-1.5 rounded-md hover:bg-gray-100 text-gray-600 transition-colors"
-                      title="Open Trip Menu"
-                    >
-                      <Menu className="w-5 h-5" />
-                    </button>
-                    <h2 className="text-[18px] font-semibold text-gray-900 tracking-tight">Day {currentDayData.dayNumber} Plan</h2>
-                  </div>
-
-                  <div className="flex gap-4 text-xs font-semibold text-gray-500">
-                    <span className="flex items-center"><Navigation className="w-3.5 h-3.5 mr-1 text-violet-500" /> {currentDayData.summary.totalTravelKm} km</span>
-                    <span className="hidden sm:flex items-center"><MapIcon className="w-3.5 h-3.5 mr-1 text-violet-500" /> {currentDayData.summary.region}</span>
+                  <div className="flex flex-col gap-3 w-full">
+                    <div className="flex items-center justify-between">
+                      <button onClick={() => navigate('/')} className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                        <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
+                      </button>
+                      <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="flex items-center text-sm font-medium text-violet-600 dark:text-violet-300 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50">
+                        <Save className="w-4 h-4 mr-1.5" /> {saveMutation.isPending ? 'Saving...' : 'Save'}
+                      </button>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="w-36">
+                        <CustomSelect 
+                          value={activeDay}
+                          onChange={(val) => setActiveDay(Number(val))}
+                          options={itinerary.days.map(d => ({ label: `Day ${d.dayNumber}`, value: d.dayNumber }))}
+                          triggerClassName="w-full text-left flex justify-between items-center border border-gray-200 rounded-lg px-3 h-10 font-semibold text-[16px] text-gray-900 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+                        />
+                      </div>
+                      
+                      <div className="flex gap-4 text-xs font-semibold text-gray-500">
+                        <span className="flex items-center"><Navigation className="w-3.5 h-3.5 mr-1 text-violet-500" /> {currentDayData.summary.totalTravelKm} km</span>
+                        <span className="hidden sm:flex items-center"><MapIcon className="w-3.5 h-3.5 mr-1 text-violet-500" /> {currentDayData.summary.region}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -210,7 +189,7 @@ export default function ItineraryPage() {
 
         {/* Right Panel (Map) */}
         <div 
-          className="relative z-0 bg-gray-100 shrink-0 self-stretch min-h-[400px] md:min-h-0"
+          className={`relative z-0 bg-gray-100 shrink-0 self-stretch md:min-h-0 ${!isDesktop && mobileTab !== 'map' ? 'hidden' : 'flex-1 md:flex-none'}`}
           style={isDesktop ? { width: `${(1 - leftRatio) * 100}%` } : { width: '100%' }}
         >
           <RouteMap 
@@ -218,14 +197,31 @@ export default function ItineraryPage() {
             routeGeometry={routeGeometry} 
             stayLocation={itinerary.preferences.stayLocation as any}
             selectedPlaceId={selectedSlot?.place.id} 
+            isVisible={isDesktop || mobileTab === 'map'}
           />
         </div>
 
       </div>
 
-      {/* Bottom Margin */}
-      <div className="h-4 shrink-0 w-full" />
-      
+      {/* Mobile Bottom Navigation */}
+      {!isDesktop && (
+        <div className="h-14 sm:h-16 shrink-0 bg-white border-t border-gray-200 flex items-center justify-around px-2 z-40 pb-safe">
+          <button 
+            onClick={() => setMobileTab('list')}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${mobileTab === 'list' ? 'text-violet-600' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            <List className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="text-[10px] sm:text-xs font-semibold">Timeline</span>
+          </button>
+          <button 
+            onClick={() => setMobileTab('map')}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${mobileTab === 'map' ? 'text-violet-600' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            <MapIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="text-[10px] sm:text-xs font-semibold">Map</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

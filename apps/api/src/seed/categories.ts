@@ -11,4 +11,6 @@ export const CATEGORIES = [
   { name: 'water-sports', icon: '🏄' },
   { name: 'nightlife', icon: '🎉' },
   { name: 'heritage', icon: '🏛️' },
+  { name: 'wellness', icon: '🧘' },
+  { name: 'cafe', icon: '☕' },
 ] as const;

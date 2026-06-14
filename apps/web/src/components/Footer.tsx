@@ -1,10 +1,10 @@
-import React from 'react';
+
 import { Link } from 'react-router-dom';
 import { Compass } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="bg-white text-gray-500 py-12 border-t border-gray-200 mt-auto">
+    <footer className="hidden md:block bg-white text-gray-500 py-12 border-t border-gray-200 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           

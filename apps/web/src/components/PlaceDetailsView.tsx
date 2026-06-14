@@ -1,5 +1,4 @@
-import React from 'react';
-import { ArrowLeft, Clock, MapPin, Navigation, Star, Tag, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Navigation, Star, Tag } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import type { SlotInfo } from './PlaceCard';
 
@@ -35,7 +34,7 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
     <div className="flex flex-col min-h-full bg-white relative">
       
       {/* Header / Nav */}
-      <div className="absolute top-0 left-0 right-0 z-20 p-4 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
+      <div className="absolute top-0 left-0 right-0 z-20 p-4 flex justify-between items-center bg-gradient-to-b from-[#000000]/60 to-transparent">
         <button 
           onClick={onBack}
           className="flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-white transition-all"
@@ -55,7 +54,7 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
             className="w-full h-full object-cover transition-opacity duration-500"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/80 via-[#000000]/20 to-transparent" />
         
         <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="flex items-center gap-3 mb-2">
@@ -157,7 +156,7 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
                   <div className="h-8 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
                   <div className="h-8 w-16 bg-gray-200 rounded-lg animate-pulse"></div>
                 </>
-              ) : place.tags?.map(tag => (
+              ) : place.tags?.map((tag: string) => (
                 <span key={tag} className="flex items-center px-3 py-1.5 bg-gray-50 text-gray-600 text-sm font-medium rounded-lg capitalize border border-gray-100">
                   <Tag className="w-3 h-3 mr-1.5 text-gray-400" />
                   {tag}

@@ -1,23 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { useItineraryStore } from '../store/itineraryStore';
 import type { Preferences } from '@travelbuddy/shared';
 import { supabase } from '../lib/supabase';
 
-const INTERESTS = [
-  { id: 'beach', label: 'Beaches', icon: '🏖️' },
-  { id: 'fort', label: 'Forts', icon: '🏰' },
-  { id: 'waterfall', label: 'Waterfalls', icon: '🌊' },
-  { id: 'temple', label: 'Temples', icon: '⛪' },
-  { id: 'church', label: 'Churches', icon: '⛪' },
-  { id: 'nature', label: 'Nature & Treks', icon: '🌿' },
-  { id: 'viewpoint', label: 'Viewpoints', icon: '🏔️' },
-  { id: 'water-sports', label: 'Water Sports', icon: '🏄' },
-  { id: 'nightlife', label: 'Nightlife', icon: '🍹' },
-  { id: 'market', label: 'Markets', icon: '🛍️' },
-  { id: 'heritage', label: 'Heritage', icon: '🏛️' },
-];
+import { useQuery } from '@tanstack/react-query';
 
 const LOCATIONS = [
   { label: 'Baga/Calangute', lat: 15.5500, lng: 73.7500 },
@@ -26,40 +14,7 @@ const LOCATIONS = [
   { label: 'Panjim', lat: 15.4900, lng: 73.8200 },
 ];
 
-function CustomSelect({ value, options, onChange }: { value: any, options: {label: string, value: any}[], onChange: (val: any) => void }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative">
-      <button 
-        type="button" 
-        onClick={() => setOpen(!open)} 
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        className="w-full text-left flex justify-between items-center border border-gray-200 rounded-lg px-3 h-10 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
-      >
-        {options.find(o => o.value === value)?.label}
-        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-      </button>
-      {open && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
-          {options.map(o => (
-            <div 
-              key={o.label} 
-              onMouseDown={(e) => { 
-                e.preventDefault(); 
-                onChange(o.value); 
-                setOpen(false); 
-              }} 
-              className="px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 cursor-pointer transition-colors"
-            >
-              {o.label}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
+import { CustomSelect } from '../components/CustomSelect';
 export default function LandingPage() {
   const navigate = useNavigate();
   const setItinerary = useItineraryStore((state) => state.setItinerary);
@@ -75,6 +30,15 @@ export default function LandingPage() {
     interests: ['beach', 'nightlife'],
     foodPreference: 'non-veg',
     includeBreakfast: true,
+  });
+
+  const { data: optionsData, isLoading: optionsLoading } = useQuery({
+    queryKey: ['metaOptions'],
+    queryFn: async () => {
+      const res = await fetch('http://localhost:3001/api/itinerary/meta/options');
+      if (!res.ok) throw new Error('Failed to fetch options');
+      return res.json();
+    }
   });
 
   const generateMutation = useMutation({
@@ -113,7 +77,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-56px)] flex flex-col items-center justify-center px-4 py-8">
+    <div className="w-full flex-1 flex flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-lg flex flex-col">
         {/* Form Section */}
         <div className="w-full bg-white border border-gray-200 rounded-2xl p-8 sm:p-10 shadow-sm">
@@ -135,11 +99,12 @@ export default function LandingPage() {
                 <label className="block text-gray-700 font-medium text-sm">Budget</label>
                 <CustomSelect 
                   value={preferences.budget}
-                  options={[
-                    { label: 'Low', value: 'LOW' },
-                    { label: 'Medium', value: 'MEDIUM' },
-                    { label: 'High', value: 'HIGH' }
-                  ]}
+                  options={
+                    optionsData?.budgetTiers?.map((b: string) => ({ 
+                      label: b.charAt(0) + b.slice(1).toLowerCase(), 
+                      value: b 
+                    })) || []
+                  }
                   onChange={(val) => setPreferences({ ...preferences, budget: val as Preferences['budget'] })}
                 />
               </div>
@@ -164,24 +129,28 @@ export default function LandingPage() {
                 Vibe & Interests
               </label>
               <div className="flex flex-wrap gap-2">
-                {INTERESTS.map(interest => {
-                  const isSelected = preferences.interests.includes(interest.id);
-                  return (
-                    <button
-                      key={interest.id}
-                      type="button"
-                      onClick={() => toggleInterest(interest.id)}
-                      className={`px-3 h-8 text-sm rounded-lg border transition-colors flex items-center gap-1.5 ${
-                        isSelected
-                          ? 'border-violet-500 bg-violet-50 text-violet-700'
-                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      <span>{interest.icon}</span>
-                      {interest.label}
-                    </button>
-                  );
-                })}
+                {optionsLoading ? (
+                  <div className="text-sm text-gray-500">Loading interests...</div>
+                ) : (
+                  optionsData?.interests?.map((interest: any) => {
+                    const isSelected = preferences.interests.includes(interest.id);
+                    return (
+                      <button
+                        key={interest.id}
+                        type="button"
+                        onClick={() => toggleInterest(interest.id)}
+                        className={`px-3 h-8 text-sm rounded-lg border transition-colors flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'border-violet-500 bg-violet-50 text-violet-700'
+                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span>{interest.icon}</span>
+                        {interest.label}
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
 

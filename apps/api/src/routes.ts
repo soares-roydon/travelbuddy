@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { PreferencesSchema } from '@travelbuddy/shared';
 import { prisma } from './lib/prisma.js';
 import { ItineraryEngine } from './services/engine.js';
-import { PlaceFilter } from './services/placeFilter.js';
+
 import { SEED_PLACES } from './seed/places.js'; // Fallback mock data
 import { authMiddleware, optionalAuthMiddleware, AuthRequest } from './middleware/auth.js';
 
@@ -34,11 +34,8 @@ router.post('/generate', optionalAuthMiddleware, async (req: AuthRequest, res) =
       allRestaurants = allPlaces.filter(p => p.type === 'RESTAURANT');
     }
 
-    // 3. Filter Places based on preferences
-    const filteredPlaces = PlaceFilter.filter(allPlaces as any, preferences);
-
-    // 4. Generate Itinerary
-    const itinerary = await ItineraryEngine.generate(preferences, filteredPlaces, allRestaurants as any);
+    // 3. Generate Itinerary (Engine handles scoring and filtering internally)
+    const itinerary = await ItineraryEngine.generate(preferences, allPlaces as any, allRestaurants as any);
 
     // 5. Optionally save to database if user is logged in (fire and forget)
     const userId = req.user?.userId;
@@ -92,6 +89,82 @@ router.get('/user/:userId', authMiddleware, async (req: AuthRequest, res) => {
     res.json({ itineraries });
   } catch (error) {
     console.error('Error fetching user itineraries:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/meta/options', async (req, res) => {
+  try {
+    const options = {
+      regions: ['NORTH', 'CENTRAL', 'SOUTH'],
+      budgetTiers: ['LOW', 'MEDIUM', 'HIGH'],
+      foodPreferences: ['veg', 'non-veg', 'vegan'],
+      interests: [
+        { id: 'beach', label: 'Beaches', icon: '🏖️' },
+        { id: 'fort', label: 'Forts & History', icon: '🏰' },
+        { id: 'waterfalls', label: 'Waterfalls', icon: '🌊' },
+        { id: 'temple', label: 'Temples', icon: '🛕' },
+        { id: 'church', label: 'Churches', icon: '⛪' },
+        { id: 'market', label: 'Local Markets', icon: '🛍️' },
+        { id: 'nature', label: 'Nature & Wildlife', icon: '🌿' },
+        { id: 'viewpoint', label: 'Viewpoints', icon: '📸' },
+        { id: 'water-sports', label: 'Water Sports', icon: '🏄' },
+        { id: 'nightlife', label: 'Nightlife', icon: '🎉' },
+        { id: 'heritage', label: 'Heritage', icon: '🏛️' },
+        { id: 'wellness', label: 'Wellness & Yoga', icon: '🧘' },
+        { id: 'cafe', label: 'Cafes', icon: '☕' },
+      ]
+    };
+    res.json(options);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const itinerary = await prisma.itinerary.findUnique({
+      where: { id }
+    });
+    
+    if (!itinerary) {
+      return res.status(404).json({ error: 'Itinerary not found' });
+    }
+    
+    res.json(itinerary);
+  } catch (error) {
+    console.error('Error fetching itinerary:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/save', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const itinerary = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const saved = await prisma.itinerary.create({
+      data: {
+        id: itinerary.id,
+        title: itinerary.title,
+        numDays: itinerary.preferences.numDays,
+        budget: itinerary.preferences.budget as any,
+        stayLatitude: itinerary.preferences.stayLocation.latitude,
+        stayLongitude: itinerary.preferences.stayLocation.longitude,
+        interests: itinerary.preferences.interests,
+        foodPreference: itinerary.preferences.foodPreference,
+        userId,
+      }
+    });
+
+    res.json(saved);
+  } catch (error) {
+    console.error('Error saving itinerary:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
