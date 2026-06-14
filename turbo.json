@@ -3,8 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build", "db:generate"],
-      "outputs": ["dist/**", "generated/**"],
-      "env": ["DATABASE_URL", "PORT", "OSRM_BASE_URL", "GEMINI_API_KEY"]
+      "outputs": ["dist/**", "generated/**"]
     },
     "dev": {
       "cache": false,
