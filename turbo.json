@@ -2,8 +2,9 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", "generated/**"]
+      "dependsOn": ["^build", "db:generate"],
+      "outputs": ["dist/**", "generated/**"],
+      "env": ["DATABASE_URL", "PORT", "OSRM_BASE_URL", "GEMINI_API_KEY"]
     },
     "dev": {
       "cache": false,
