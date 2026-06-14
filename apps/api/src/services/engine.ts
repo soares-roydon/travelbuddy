@@ -22,6 +22,12 @@ export class ItineraryEngine {
     // 1. Intelligent Scoring & Selection
     const scoredPlaces = PlaceScorer.scoreAndFilter(allPlaces, preferences);
 
+    // Safe stay location for calculations
+    const safeStayLocation: Coordinates = {
+      latitude: preferences.stayLocation.latitude ?? 15.2993,
+      longitude: preferences.stayLocation.longitude ?? 74.1240,
+    };
+
     // 2. Time Budget Allocation
     const budgets = TimeBudgetAllocator.allocate(preferences, scoredPlaces.length);
 
@@ -38,20 +44,20 @@ export class ItineraryEngine {
       if (dayPlaces.length === 0) continue;
 
       // 4. Optimize Route (TSP)
-      const optimizedPlaces = RouteOptimizer.optimize(dayPlaces, preferences.stayLocation);
+      const optimizedPlaces = RouteOptimizer.optimize(dayPlaces, safeStayLocation);
 
       // 5. Slot Scheduling
-      let scheduledSlots = SlotScheduler.schedule(optimizedPlaces, preferences.stayLocation, budget);
+      let scheduledSlots = SlotScheduler.schedule(optimizedPlaces, safeStayLocation, budget);
 
       // 6. Meal Planning
       scheduledSlots = MealPlanner.planMeals(scheduledSlots, allRestaurants, preferences);
 
       // 7. OSRM Travel Times (Re-evaluate final route timings)
-      scheduledSlots = await this.recalculateScheduleWithOSRM(scheduledSlots, preferences.stayLocation, budget.startMinute);
+      scheduledSlots = await this.recalculateScheduleWithOSRM(scheduledSlots, safeStayLocation, budget.startMinute);
 
       // 8. Geometry Fetching
       const placesInFinalOrder = scheduledSlots.map(s => s.place);
-      const fullDayGeometry = await osrm.getRouteGeometry(preferences.stayLocation, placesInFinalOrder);
+      const fullDayGeometry = await osrm.getRouteGeometry(safeStayLocation, placesInFinalOrder);
 
       // Day Summary Calcs
       const totalTravelMins = scheduledSlots.reduce((sum, slot) => sum + slot.travelFromPrevMinutes, 0);
