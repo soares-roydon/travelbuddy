@@ -6,3 +6,4 @@ generated/
 .env
 .env.local
 .env.*.local
+.env.production

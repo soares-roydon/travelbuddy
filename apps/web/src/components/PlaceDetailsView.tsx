@@ -14,7 +14,7 @@ export function PlaceDetailsView({ slot, onBack }: PlaceDetailsViewProps) {
   const { data: fetchedPlace, isLoading } = useQuery({
     queryKey: ['place', slot.place.id],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:3001/api/places/${slot.place.id}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/places/${slot.place.id}`);
       if (!res.ok) throw new Error('Failed to fetch place');
       return res.json();
     },

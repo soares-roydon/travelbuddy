@@ -35,7 +35,7 @@ export default function LandingPage() {
   const { data: optionsData, isLoading: optionsLoading } = useQuery({
     queryKey: ['metaOptions'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3001/api/itinerary/meta/options');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/itinerary/meta/options`);
       if (!res.ok) throw new Error('Failed to fetch options');
       return res.json();
     }
@@ -53,7 +53,7 @@ export default function LandingPage() {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch('http://localhost:3001/api/itinerary/generate', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/itinerary/generate`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),

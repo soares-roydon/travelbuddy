@@ -30,7 +30,7 @@ export default function MyItinerariesPage() {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(`http://localhost:3001/api/itinerary/user/${user?.id}`, { headers });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/itinerary/user/${user?.id}`, { headers });
       if (!res.ok) throw new Error('Failed to fetch itineraries');
       return res.json();
     },

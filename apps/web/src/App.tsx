@@ -14,15 +14,14 @@ function App() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-        const user = session.user;
-        fetch('http://localhost:3001/api/auth/sync', {
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            id: user.id,
-            email: user.email,
-            name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-            avatarUrl: user.user_metadata?.avatar_url || null,
+            id: session.user.id,
+            email: session.user.email,
+            name: session.user.user_metadata?.full_name || session.user.email,
+            avatarUrl: session.user.user_metadata?.avatar_url,
           }),
         })
         .then(res => res.json())

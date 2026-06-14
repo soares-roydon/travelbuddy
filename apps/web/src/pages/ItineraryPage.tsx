@@ -79,7 +79,7 @@ export default function ItineraryPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Must be logged in to save');
       
-      const res = await fetch('http://localhost:3001/api/itinerary/save', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/itinerary/save`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
