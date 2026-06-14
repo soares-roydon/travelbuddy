@@ -91,7 +91,11 @@ app.get('/api/categories', async (_req, res) => {
 });
 
 // ── Start Server ──
-app.listen(PORT, () => {
-  console.log(`\n🚀 TravelBuddy API running at http://localhost:${PORT}`);
-  console.log(`   Health: http://localhost:${PORT}/api/health\n`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 TravelBuddy API running at http://localhost:${PORT}`);
+    console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+  });
+}
+
+export default app;
