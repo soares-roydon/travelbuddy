@@ -11,16 +11,12 @@ export class PlaceFilter {
     // Filter by Interests (Tags/Category)
     if (preferences.interests && preferences.interests.length > 0) {
       filtered = filtered.filter(p => {
-        // If it's a beach and user selected beaches, etc.
-        // We do a loose match: if any place tag is in the user's interests, or the category matches
-        const placeTags = p.tags || [];
-        const categoryName = (p as any).categoryName || ''; // SchedulablePlace might not have categoryName typed, but SeedPlace does
+        const categoryName = ((p as any).categoryName || '').toLowerCase();
+        const interests = preferences.interests!.map(i => i.toLowerCase());
         
-        return preferences.interests.some(interest => 
-          placeTags.includes(interest.toLowerCase()) || 
-          p.type.toLowerCase() === interest.toLowerCase() ||
-          categoryName.toLowerCase() === interest.toLowerCase()
-        );
+        // Strict match: if a place's category is one of the main interests,
+        // it must be explicitly selected by the user.
+        return interests.includes(categoryName);
       });
     }
 

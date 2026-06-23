@@ -58,7 +58,10 @@ async function seed() {
   }
 
   // ── 2. Clear existing places and re-seed ──
-  console.log('\n🗑️  Clearing existing places...');
+  console.log('\n🗑️  Clearing existing itineraries and places...');
+  await prisma.itinerarySlot.deleteMany({});
+  await prisma.itineraryDay.deleteMany({});
+  await prisma.itinerary.deleteMany({});
   await prisma.place.deleteMany({});
 
   // ── Disconnect to prevent idle timeout during image fetching ──
@@ -74,9 +77,9 @@ async function seed() {
       console.warn(`   ⚠️  Skipping "${place.name}" — category "${place.categoryName}" not found`);
       continue;
     }
-    const imageUrl = await fetchImageForPlace(place.name, place.categoryName);
+    let imageUrl = FALLBACK_IMAGES[place.categoryName] || FALLBACK_IMAGES['default'];
     placesWithImages.push({ ...place, categoryId, imageUrl });
-    process.stdout.write(`\r   Fetched ${i+1}/${SEED_PLACES.length}`);
+    if (i % 1000 === 0) process.stdout.write(`\r   Processed ${i+1}/${SEED_PLACES.length}`);
   }
   console.log('\n');
 
@@ -84,38 +87,40 @@ async function seed() {
   console.log('🔌 Reconnecting to DB...');
   await prisma.$connect();
 
-  console.log('\n🗑️  Clearing existing places...');
+  console.log('\n🗑️  Clearing existing places again...');
+  await prisma.itinerarySlot.deleteMany({});
+  await prisma.itineraryDay.deleteMany({});
+  await prisma.itinerary.deleteMany({});
   await prisma.place.deleteMany({});
 
   console.log('📍 Seeding places to database...');
   let count = 0;
 
-  for (const place of placesWithImages) {
-    await prisma.place.create({
-      data: {
-        name: place.name,
-        description: place.description,
-        imageUrl: place.imageUrl,
-        latitude: place.latitude,
-        longitude: place.longitude,
-        type: place.type,
-        categoryId: place.categoryId,
-        region: place.region,
-        estimatedDurationMinutes: place.estimatedDurationMinutes,
-        bestTimeStart: place.bestTimeStart,
-        bestTimeEnd: place.bestTimeEnd,
-        isOpenAtNight: place.isOpenAtNight,
-        budgetTier: place.budgetTier,
-        avgCostPerPerson: place.avgCostPerPerson,
-        mealType: place.mealType,
-        tags: place.tags,
-        rating: place.rating,
-        reviewCount: place.reviewCount,
-      },
-    });
-
-    count++;
-    console.log(`   ✅ [${place.region}] ${place.name}`);
+  const batchSize = 1000;
+  for (let i = 0; i < placesWithImages.length; i += batchSize) {
+    const batch = placesWithImages.slice(i, i + batchSize).map(place => ({
+      name: place.name,
+      description: place.description,
+      imageUrl: place.imageUrl,
+      latitude: place.latitude,
+      longitude: place.longitude,
+      type: place.type,
+      categoryId: place.categoryId,
+      region: place.region,
+      estimatedDurationMinutes: place.estimatedDurationMinutes,
+      bestTimeStart: place.bestTimeStart,
+      bestTimeEnd: place.bestTimeEnd,
+      isOpenAtNight: place.isOpenAtNight,
+      budgetTier: place.budgetTier,
+      avgCostPerPerson: place.avgCostPerPerson,
+      mealType: place.mealType,
+      tags: place.tags,
+      rating: place.rating,
+      reviewCount: place.reviewCount,
+    }));
+    await prisma.place.createMany({ data: batch });
+    count += batch.length;
+    console.log(`   ✅ Processed batch of ${batch.length} places (Total: ${count})`);
   }
 
   console.log(`\n🎉 Seeded ${CATEGORIES.length} categories and ${count} places!\n`);

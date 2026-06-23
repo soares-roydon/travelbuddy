@@ -1,8 +1,6 @@
-
-import { Clock, MapPin, Navigation } from 'lucide-react';
+import { Clock, MapPin, Navigation, ChevronRight } from 'lucide-react';
 import type { SchedulablePlace } from '@travelbuddy/shared';
 
-// Define a local type since ItinerarySlot Response has more fields than just SchedulablePlace
 export interface SlotInfo {
   place: SchedulablePlace & { 
     imageUrl?: string | null; 
@@ -17,73 +15,90 @@ export interface SlotInfo {
   travelFromPrev?: { minutes: number; km: number } | null;
 }
 
+const TYPE_IMAGES: Record<string, string> = {
+  BEACH: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=600&auto=format&fit=crop',
+  ATTRACTION: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=600&auto=format&fit=crop',
+  RESTAURANT: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=600&auto=format&fit=crop',
+  ACTIVITY: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600&auto=format&fit=crop',
+};
+
+function formatAmPm(time: string) {
+  if (!time) return '';
+  const [h, m] = time.split(':');
+  const hours = parseInt(h, 10);
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${m} ${ampm}`;
+}
+
 export function PlaceCard({ slot, onClick }: { slot: SlotInfo; onClick?: () => void }) {
   const { place, isMealStop } = slot;
-  
-  // High quality placeholder based on type
-  const fallbackImage = place.type === 'BEACH' || place.type === 'ATTRACTION' 
-    ? 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=600&auto=format&fit=crop'
-    : 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=600&auto=format&fit=crop';
-    
-  const imageUrl = place.imageUrl || fallbackImage;
+  const imageUrl = place.imageUrl || TYPE_IMAGES[place.type] || TYPE_IMAGES.ATTRACTION;
 
   return (
-    <div 
-      onClick={onClick}
-      className={`group/card relative flex items-center gap-4 p-3 bg-white rounded-2xl border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${onClick ? 'cursor-pointer' : ''} ${
-      isMealStop ? 'border-orange-200/60 bg-orange-50/10 hover:border-orange-300' : 'border-gray-200 hover:border-violet-300'
-    }`}>
-      
-      {/* Travel Indicator (Floating badge) */}
+    <div className="relative">
+      {/* Travel Indicator */}
       {slot.travelFromPrev && slot.travelFromPrev.minutes > 0 && (
-        <div className="absolute -top-3 right-4 z-20 shadow-sm text-[10px] font-bold uppercase tracking-wide text-gray-600 flex items-center bg-white px-2.5 py-0.5 rounded-full border border-gray-200">
-          <Navigation className="w-3 h-3 mr-1 text-violet-500" />
-          {slot.travelFromPrev.minutes} min drive
+        <div className="flex items-center gap-2 mb-3 ml-1">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-400">
+            <Navigation className="w-3.5 h-3.5 text-zinc-500" />
+            <span>{slot.travelFromPrev.minutes} min</span>
+            <span className="text-zinc-600">•</span>
+            <span>{slot.travelFromPrev.km} km drive</span>
+          </div>
         </div>
       )}
 
-      {/* Image Section */}
-      <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 relative rounded-xl overflow-hidden bg-gray-100">
-        <img 
-          src={imageUrl} 
-          alt={place.name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105"
-        />
-      </div>
-
-      {/* Content Section */}
-      <div className="flex-1 min-w-0 pr-2">
-        <div className="flex justify-between items-start mb-1.5 gap-2">
-          <h3 className="text-[16px] font-semibold text-gray-900 leading-tight tracking-tight line-clamp-2">
-            {place.name}
-          </h3>
+      {/* Card (Fixed Height for consistency) */}
+      <button
+        onClick={onClick}
+        className="w-full text-left group relative flex items-stretch gap-4 p-3 h-32 glass hover:bg-white/[0.05] transition-all duration-200 active:scale-[0.98] rounded-xl border border-white/10"
+      >
+        {/* Image */}
+        <div className="w-24 shrink-0 rounded-lg overflow-hidden bg-white/5 relative">
+          <img
+            src={imageUrl}
+            alt={place.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
           {isMealStop && (
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900/40 px-2 py-0.5 rounded border border-orange-200/50 dark:border-orange-800/50 mt-0.5">
+            <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-brand-600 rounded text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
               {slot.mealType}
-            </span>
+            </div>
           )}
         </div>
-        
-        <div className="flex flex-col gap-1.5 mt-2">
-          <div className="flex items-center text-[13px] text-violet-700 font-medium">
-            <Clock className="w-3.5 h-3.5 mr-1.5 opacity-70" />
-            {slot.startTime} - {slot.endTime}
-            <span className="text-gray-400 font-normal ml-1.5">({slot.durationMinutes}m)</span>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col justify-center min-w-0 py-1">
+          <h3 className="text-sm font-semibold text-white leading-tight tracking-tight line-clamp-2 mb-1.5 pr-4">
+            {place.name}
+          </h3>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-brand-500 font-medium mb-1.5">
+            <Clock className="w-3 h-3 opacity-80" />
+            <span>{formatAmPm(slot.startTime)} – {formatAmPm(slot.endTime)}</span>
           </div>
-          
-          <div className="flex items-center gap-3 text-[13px]">
+
+          <div className="flex items-center gap-3 text-[11px] mt-auto">
             {place.rating && place.rating > 0 && (
-              <div className="flex items-center text-amber-600 font-medium">
-                ★ {place.rating}
+              <div className="flex items-center gap-1 text-zinc-300 font-medium">
+                <span className="text-brand-500">★</span>
+                <span>{place.rating}</span>
               </div>
             )}
-            <span className="flex items-center text-gray-500 font-medium truncate">
-              <MapPin className="w-3.5 h-3.5 mr-1 opacity-70" />
+            <span className="flex items-center gap-1 text-zinc-400 font-medium truncate">
+              <MapPin className="w-3 h-3 shrink-0" />
               {place.region || 'Goa'}
             </span>
           </div>
         </div>
-      </div>
+
+        {/* Chevron */}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
+        </div>
+      </button>
     </div>
   );
 }

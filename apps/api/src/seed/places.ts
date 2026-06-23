@@ -5,7 +5,14 @@ import { SCRATCH_RESTAURANTS } from './scratch_restaurants.js';
 import { EXTRA_ATTRACTIONS } from './extra_attractions.js';
 import { EXTRA_RESTAURANTS } from './extra_restaurants.js';
 import { EXTRA_ACTIVITIES } from './extra_activities.js';
+import { EXTRA_WATERFALLS } from './extra_waterfalls.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const BATCH_OSM: SeedPlace[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'batch_osm.json'), 'utf-8'));
 export interface SeedPlace {
   name: string;
   description: string;
@@ -1091,4 +1098,6 @@ export const SEED_PLACES: SeedPlace[] = [
   ...EXTRA_ATTRACTIONS,
   ...EXTRA_RESTAURANTS,
   ...EXTRA_ACTIVITIES,
+  ...EXTRA_WATERFALLS,
+  ...BATCH_OSM,
 ];

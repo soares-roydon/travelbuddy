@@ -5,6 +5,7 @@ import LandingPage from './pages/LandingPage';
 import ItineraryPage from './pages/ItineraryPage';
 import AuthPage from './pages/AuthPage';
 import MyItinerariesPage from './pages/MyItinerariesPage';
+import ExplorePage from './pages/ExplorePage';
 import { AppLayout } from './components/AppLayout';
 import { supabase } from './lib/supabase';
 
@@ -46,6 +47,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/explore" element={<ExplorePage />} />
             <Route path="/itineraries" element={<MyItinerariesPage />} />
             <Route path="/itinerary/:id" element={<ItineraryPage />} />
           </Routes>

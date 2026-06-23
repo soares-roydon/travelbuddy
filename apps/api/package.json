@@ -10,7 +10,8 @@
     "lint": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx src/seed/run.ts"
+    "db:seed": "tsx src/seed/run.ts",
+    "db:images": "tsx src/seed/update_images.ts"
   },
   "dependencies": {
     "@google/genai": "^2.8.0",
