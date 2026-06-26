@@ -14,7 +14,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { useMutation } from '@tanstack/react-query';
 import RouteMap from '../components/RouteMap';
-import { PlaceCard } from '../components/PlaceCard';
+
 import type { SlotInfo } from '../components/PlaceCard';
 import { PlaceDetailsView } from '../components/PlaceDetailsView';
 import { Button } from '../components/Button';
@@ -71,7 +71,6 @@ function DayPill({ dayNumber, isActive, totalKm, region, onClick }: DayPillProps
 interface TimelineStopProps {
   slot: SlotInfo;
   index: number;
-  totalStops: number;
   onSelect: () => void;
 }
 
@@ -85,7 +84,7 @@ function formatAmPm(timeStr: string) {
   return `${hour}:${m} ${ampm}`;
 }
 
-function TimelineStop({ slot, index, totalStops, onSelect }: TimelineStopProps) {
+function TimelineStop({ slot, index, onSelect }: TimelineStopProps) {
   const { place, isMealStop } = slot;
 
   const fallbackImage =
@@ -94,7 +93,7 @@ function TimelineStop({ slot, index, totalStops, onSelect }: TimelineStopProps) 
       : 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=600&auto=format&fit=crop';
 
   const imageUrl = place.imageUrl || fallbackImage;
-  const isLast = index === totalStops - 1;
+
 
   return (
     <div className="relative pb-4">
@@ -571,7 +570,7 @@ export default function ItineraryPage() {
                   key={`${activeDay}-${idx}`}
                   slot={slot as unknown as SlotInfo}
                   index={idx}
-                  totalStops={totalStops}
+
                   onSelect={() => setSelectedSlot(slot as unknown as SlotInfo)}
                 />
               ))}

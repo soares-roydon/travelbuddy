@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { MapPin, Search, Star, Loader2, Filter } from 'lucide-react';
+import { MapPin, Search, Star, Loader2 } from 'lucide-react';
 import type { SchedulablePlace } from '@travelbuddy/shared';
 
 const TYPE_IMAGES: Record<string, string> = {

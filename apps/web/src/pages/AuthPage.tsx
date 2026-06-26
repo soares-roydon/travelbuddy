@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { Loader2, Mail, User, Settings, Shield, LogOut, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { Mail, User, Settings, Shield, LogOut, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/Button';
 
 export default function AuthPage() {

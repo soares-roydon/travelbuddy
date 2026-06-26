@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, CalendarDays, User as UserIcon, LogOut, Menu, Globe, Sparkles } from 'lucide-react';
+import { Compass, CalendarDays, User as UserIcon, Globe, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';

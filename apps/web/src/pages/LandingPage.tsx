@@ -157,7 +157,6 @@ export default function LandingPage() {
 
   // Step state
   const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState<'forward' | 'back'>('forward');
   const [animating, setAnimating] = useState(false);
 
   // Preferences state
@@ -231,7 +230,6 @@ export default function LandingPage() {
   const goTo = useCallback(
     (target: number) => {
       if (animating || target < 0 || target >= TOTAL_STEPS) return;
-      setDirection(target > step ? 'forward' : 'back');
       setAnimating(true);
       setStep(target);
       setTimeout(() => setAnimating(false), 400);
@@ -333,7 +331,7 @@ export default function LandingPage() {
           <div className="min-h-full flex flex-col items-center justify-center py-10 px-5">
             <div className="w-full max-w-lg mx-auto">
             {/* ── Step 0: Hero / Welcome ── */}
-            <StepWrapper active={step === 0} direction={direction}>
+            <StepWrapper active={step === 0}>
               <div className="flex flex-col items-center text-center">
                 {/* Floating plane icon */}
                 <div
@@ -392,7 +390,7 @@ export default function LandingPage() {
             </StepWrapper>
 
             {/* ── Step 1: Duration ── */}
-            <StepWrapper active={step === 1} direction={direction}>
+            <StepWrapper active={step === 1}>
               <div className="flex flex-col items-center text-center">
                 <StepHeader
                   icon={Clock}
@@ -425,7 +423,7 @@ export default function LandingPage() {
             </StepWrapper>
 
             {/* ── Step 2: Budget ── */}
-            <StepWrapper active={step === 2} direction={direction}>
+            <StepWrapper active={step === 2}>
               <div className="flex flex-col items-center text-center">
                 <StepHeader
                   icon={Wallet}
@@ -496,7 +494,7 @@ export default function LandingPage() {
             </StepWrapper>
 
             {/* ── Step 3: Location ── */}
-            <StepWrapper active={step === 3} direction={direction}>
+            <StepWrapper active={step === 3}>
               <div className="flex flex-col items-center text-center">
                 <StepHeader
                   icon={MapPin}
@@ -553,7 +551,7 @@ export default function LandingPage() {
             </StepWrapper>
 
             {/* ── Step 4: Interests ── */}
-            <StepWrapper active={step === 4} direction={direction}>
+            <StepWrapper active={step === 4}>
               <div className="flex flex-col items-center text-center">
                 <StepHeader
                   icon={Heart}
@@ -599,7 +597,7 @@ export default function LandingPage() {
             </StepWrapper>
 
             {/* ── Step 5: Food & Extras ── */}
-            <StepWrapper active={step === 5} direction={direction}>
+            <StepWrapper active={step === 5}>
               <div className="flex flex-col items-center text-center">
                 <StepHeader
                   icon={UtensilsCrossed}
@@ -692,7 +690,7 @@ export default function LandingPage() {
             </StepWrapper>
 
             {/* ── Step 6: Loading / Generating ── */}
-            <StepWrapper active={step === 6} direction={direction}>
+            <StepWrapper active={step === 6}>
               <div className="flex flex-col items-center text-center">
                 {generateMutation.isError ? (
                   <>
@@ -790,11 +788,9 @@ export default function LandingPage() {
 
 function StepWrapper({
   active,
-  direction,
   children,
 }: {
   active: boolean;
-  direction: 'forward' | 'back';
   children: React.ReactNode;
 }) {
   if (!active) return null;

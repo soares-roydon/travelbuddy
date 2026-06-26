@@ -1,25 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Compass, CalendarDays, Map, Sparkles } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import type { User } from '@supabase/supabase-js';
 
 export function BottomNav() {
   const location = useLocation();
-  const [user, setUser] = useState<User | null>(null);
-  const userInitial = user?.user_metadata?.name?.[0] || user?.email?.[0] || 'U';
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const navItems = [
     {
